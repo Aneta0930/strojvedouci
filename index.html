@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Status</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 100px;
+        background-color: #f0f0f0;
+    }
+
+    #time {
+        font-size: 28px;
+        margin-bottom: 40px;
+    }
+
+    #button {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        color: white;
+    }
+</style>
+</head>
+<body>
+
+<div id="time">--</div>
+<button id="button"></button>
+
+<script>
+const SUPABASE_URL = "https://ccczkzhzfpqjhtkfmrou.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjY3premh6ZnBxamh0a2Ztcm91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1OTI0MTksImV4cCI6MjA5MTE2ODQxOX0.iJGA-pe29Pi7AofUQKw2xa9NuxcB-pO_f3q15xhvdpE";
+
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const LIMIT_MINUTES = 20;
+
+async function updateTime() {
+    const now = new Date().toISOString();
+
+    await client
+        .from("status")
+        .update({ time: now })
+        .eq("id", 1);
+
+    render();
+}
+
+async function render() {
+    const { data } = await client
+        .from("status")
+        .select("time")
+        .eq("id", 1)
+        .single();
+
+    const timeDiv = document.getElementById("time");
+    const button = document.getElementById("button");
+
+    if (data && data.time) {
+        const last = new Date(data.time);
+        timeDiv.textContent = last.toLocaleString();
+
+        const now = new Date();
+        const diffMinutes = (now - last) / 1000 / 60;
+
+        if (diffMinutes <= LIMIT_MINUTES) {
+            button.style.backgroundColor = "#4CAF50";
+        } else {
+            button.style.backgroundColor = "#e53935";
+        }
+    } else {
+        timeDiv.textContent = "--";
+        button.style.backgroundColor = "#e53935";
+    }
+}
+
+document.getElementById("button").addEventListener("click", updateTime);
+
+// refresh každých 10 s
+setInterval(render, 10000);
+
+render();
+</script>
+
+</body>
+</html>
